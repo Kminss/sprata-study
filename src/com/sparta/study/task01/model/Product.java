@@ -1,4 +1,4 @@
-package com.sparta.study.task01;
+package com.sparta.study.task01.model;
 //커피, 디저트
 public class Product extends Menu{
     private double price;

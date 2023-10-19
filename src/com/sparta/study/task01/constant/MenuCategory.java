@@ -1,4 +1,4 @@
-package com.sparta.study.task01;
+package com.sparta.study.task01.constant;
 /*
 * 메뉴를 enum으로 만들어 사용하는 이유
 *  - 메뉴는 자주 변경이 되니, Kisosk에서 출력문을 수정하는 것 보다 enum 코드를 변경하여

@@ -1,5 +1,7 @@
 package com.sparta.study.task01;
 
+import com.sparta.study.task01.app.KioskApp;
+
 public class Main {
 
 

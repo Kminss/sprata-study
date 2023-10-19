@@ -1,4 +1,4 @@
-package com.sparta.study.task01;
+package com.sparta.study.task01.model;
 
 import java.util.ArrayList;
 import java.util.List;
