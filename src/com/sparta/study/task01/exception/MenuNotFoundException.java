@@ -1,4 +1,4 @@
-package com.sparta.study.task01;
+package com.sparta.study.task01.exception;
 
 public class MenuNotFoundException extends Exception{
     public MenuNotFoundException() {
