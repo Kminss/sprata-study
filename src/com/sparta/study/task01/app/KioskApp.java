@@ -35,15 +35,35 @@ public class KioskApp {
 
             if (select > menuLength) {
                 //주문 메뉴
-                if (select == menuLength + 1) {
-                    //주문
-                } else {
-
-                    //주문취소
+                switch (select - menuLength) {
+                    case 1:
+                        return true; // 주문
+                    case 2:
+                        return false; // 주문취소
                 }
             } else {
+                //메뉴보기
+                MenuCategory category = MenuCategory.values()[select - 1];
+                List<Product> products = getProductsViaCategory(category);
+
                 //상품 메뉴
-                showProductMenu(MenuCategory.values()[select - 1]);
+                showProductMenu(products, category);
+                select = sc.nextInt();
+
+                //상품 선택
+                Product product = products.get(select - 1);
+                showBuyProduct(product);
+                select = sc.nextInt();
+
+                //주문 결정
+                switch (select) {
+                    case 1 -> {
+                        order.addCart(product);
+                        this.start();
+                    }
+                    case 2 -> this.start();
+                    default -> throw new IndexOutOfBoundsException();
+                }
             }
         } catch (Exception ex) {
             throw new Exception("다시 입력해주세요.");
@@ -51,7 +71,24 @@ public class KioskApp {
         return true;
     }
 
-    void showMenu() {
+    private List<Product> getProductsViaCategory(MenuCategory category) throws MenuNotFoundException {
+        return menus.stream()
+                .filter(m -> m.getName().equals(category.name()))
+                .findFirst()
+                .orElseThrow(MenuNotFoundException::new)
+                .getProducts();
+    }
+
+    private void showBuyProduct(Product product) {
+       /* "Hamburger     | W 5.4 | 비프패티를 기반으로 야채가 들어간 기본버거"
+        위 메뉴를 장바구니에 추가하시겠습니까?
+        1. 확인        2. 취소*/
+        System.out.println(product.printMenu());
+        System.out.println("위 메뉴를 장바구니에 추가하시겠습니까?");
+        System.out.println("1. 확인        2. 취소");
+    }
+
+    private void showMenu() {
         int idx = 1;
         System.out.println("\"투썸플레이스에 오신걸 환영합니다.\"");
         System.out.println("아래 메뉴판을 보시고 메뉴를 골라 입력해주세요.");
@@ -67,23 +104,14 @@ public class KioskApp {
 
     }
 
-    private void showProductMenu(MenuCategory category) throws MenuNotFoundException {
-        List<Product> products = menus.stream()
-                .filter(m -> m.getName().equals(category.name()))
-                .findFirst()
-                .orElseThrow(MenuNotFoundException::new)
-                .getProducts();
+    private void showProductMenu(List<Product> products, MenuCategory category) {
 
-        if (products.isEmpty()) {
-            System.out.println("메뉴가 없습니다.");
-            return;
-        }
         System.out.println("\"투썸플레이스에 오신걸 환영합니다.\"");
         System.out.println("아래 상품메뉴판을 보시고 메뉴를 골라 입력해주세요.");
         System.out.printf("[ %s MENU ] %n", category);
         int idx = 1;
-        for (int i = 0; i < products.size(); i++) {
-            System.out.printf("%d. %s %n", idx++, products.get(i).printMenu());
+        for (Product product : products) {
+            System.out.printf("%d. %s %n", idx++, product.printMenu());
         }
     }
 

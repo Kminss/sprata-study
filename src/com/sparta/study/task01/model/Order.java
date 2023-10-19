@@ -7,7 +7,7 @@ public class Order {
     private List<Product> products = new ArrayList<>(); //상품목록
     private int waitNo; //대기 번호
 
-    void addCart(Product product) {
+    public void addCart(Product product) {
         products.add(product);
     }
 
