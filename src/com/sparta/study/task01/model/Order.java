@@ -7,7 +7,7 @@ public class Order {
     private List<Product> products = new ArrayList<>(); //상품목록
     private int waitNo; //대기 번호
 
-    public void addCart(Product product) {
+    public void addProduct(Product product) {
         products.add(product);
     }
 
@@ -15,5 +15,22 @@ public class Order {
         return products.stream()
                 .mapToDouble(Product::getPrice)
                 .sum();
+    }
+
+    public List<Product> getProducts() {
+        return products;
+    }
+
+    public void setWaitNoAndClearCart(int waitNo) {
+        this.waitNo = waitNo;
+        products.clear();
+    }
+
+    public void cancel() {
+        products.clear();
+    }
+
+    public int getWaitNo() {
+        return waitNo;
     }
 }
