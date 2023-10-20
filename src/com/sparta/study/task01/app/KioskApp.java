@@ -75,17 +75,29 @@ public class KioskApp {
         if (select == 0) {
             totalSalesPriceProcess(sc);
         } else if (select == 1) {
-            showSales();
+            salesListProcess(sc);
         } else {
             this.start();
         }
-
     }
 
-    private void showSales() {
-        System.out.println("zz");
+    private void salesListProcess(Scanner sc) {
+        System.out.println("[ 총 판매상품 목록 현황 ]");
 
+        for (Order order : sales) {
+            for (Product product : order.getProducts()) {
+                System.out.printf("- %-38s | W %.1f %n", product.getName(), product.getResultPrice());
+            }
+        }
+        System.out.println("1. 돌아가기");
+        int select = sc.nextInt();
+        if (select == 1) {
+            salesMenuProcess(sc);
+        } else {
+            throw new IndexOutOfBoundsException("잘 못된 입력으로 메인 메뉴로 돌아갑니다.");
+        }
     }
+
 
     private void totalSalesPriceProcess(Scanner sc) {
         double totalSalesPrice = sales.stream()
@@ -100,7 +112,7 @@ public class KioskApp {
         if (select == 1) {
             salesMenuProcess(sc);
         } else {
-            throw new IndexOutOfBoundsException();
+            throw new IndexOutOfBoundsException("잘 못된 입력으로 메인 메뉴로 돌아갑니다.");
         }
     }
 
