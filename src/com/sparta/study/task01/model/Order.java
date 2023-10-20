@@ -8,56 +8,56 @@ import java.util.Map;
 public class Order {
     private List<Product> products = new ArrayList<>(); //상품목록
     private Map<String, Integer> countMap = new HashMap<>();
+    private double totalPrice = 0;
     private int waitNo; //대기 번호
 
-    public void addProduct(Product product) {
-        String key = product.getName() + product.getOption();
-        Integer count = countMap.getOrDefault(key, 0);
+    public Order(List<Product> products, int waitNo) {
+        this.products = products;
+        this.waitNo = waitNo;
 
-        products.add(product);
-        countMap.put(key, ++count);
+        products.forEach(product -> {
+                    String key = product.getName() + product.getOption();
+                    Integer count = countMap.getOrDefault(key, 0);
+
+                    countMap.put(key, ++count);
+                    totalPrice += product.getResultPrice();
+                });
     }
 
     public String printTotal() {
         double total = products.stream()
-                .mapToDouble(Product::getPrice)
+                .mapToDouble(Product::getResultPrice)
                 .sum();
         return String.format("W %.1f", total);
-    }
-
-    public List<Product> getProducts() {
-        return products;
-    }
-
-    public void setWaitNoAndClearCart(int waitNo) {
-        this.waitNo = waitNo;
-        products.clear();
-        countMap.clear();
     }
 
     public String printOrderProductsInfo() {
         StringBuilder sb = new StringBuilder();
         products.stream()
                 .distinct()
-                .forEach(product ->
-                        sb.append(
-                                String.format(
-                                        "%s (%s) %10s |  W %.1f  |  %d개  |  %s %n",
-                                        product.getName(),
-                                        product.getOption()
-                                                .getEng(),
-                                        " ",
-                                        product.getResultPrice(),
-                                        countMap.get(product.getName() + product.getOption()),
-                                        product.getDescription()
-                                )
-                        )
+                .forEach(product -> {
+                    String name = product.getName() + " " + product.getOption().getEng();
+                            sb.append(
+                                    String.format(
+                                            "%-10s |  W %.1f  |  %d개  |  %s %n",
+                                            name,
+                                            product.getResultPrice(),
+                                            countMap.get(product.getName() + product.getOption()),
+                                            product.getDescription()
+                                    )
+                            );
+                        }
                 );
         return sb.toString();
     }
-    public void cancel() {
-        products.clear();
+    public List<Product> getProducts() {
+        return products;
     }
+
+    public double getTotalPrice() {
+        return totalPrice;
+    }
+
 
     public int getWaitNo() {
         return waitNo;
