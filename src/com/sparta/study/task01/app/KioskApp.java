@@ -15,10 +15,12 @@ import static com.sparta.study.task01.constant.OrderCommand.ORDER;
 
 public class KioskApp {
     private final List<Menu> menus = new ArrayList<>();
-    private final Order order = new Order();
+    private final List<Order> sales = new ArrayList<>();
+    private final List<Product> cart = new ArrayList<>();
     private int waitNo = 1;
 
     //
+    private static final int SALES_MENU_SIZE = -1;
     private static final int ORDER_MENU_SIZE = 2;
     private static final int MENU_CATEGORY_SIZE = MenuCategory.values().length;
     private static final int INVALID_SELECT = MENU_CATEGORY_SIZE + ORDER_MENU_SIZE;
@@ -36,7 +38,7 @@ public class KioskApp {
             showMenu();
             int select = sc.nextInt() - 1;
             //주문 입력창 수를 벗어난 경우
-            if (select > INVALID_SELECT || select < 0) {
+            if (select > INVALID_SELECT || select < -1) {
                 throw new IndexOutOfBoundsException(INVALID_SELECT_MESSAGE);
             }
             menuProcess(sc, select);
@@ -54,11 +56,51 @@ public class KioskApp {
         return true;
     }
 
+
     private void menuProcess(Scanner sc, int select) {
+
+        if (select == SALES_MENU_SIZE) {
+            salesMenuProcess(sc);
+        }
         if (select >= MENU_CATEGORY_SIZE) {
             orderMenuProcess(sc, OrderCommand.values()[select - MENU_CATEGORY_SIZE]);
         } else {
             productMenuProcess(sc, MenuCategory.values()[select]);
+        }
+    }
+
+    private void salesMenuProcess(Scanner sc) {
+        System.out.println("1. 총 판매금액 조회        2. 총 판매상품 목록 조회     3. 돌아가기  ");
+        int select = sc.nextInt() - 1;
+        if (select == 0) {
+            totalSalesPriceProcess(sc);
+        } else if (select == 1) {
+            showSales();
+        } else {
+            this.start();
+        }
+
+    }
+
+    private void showSales() {
+        System.out.println("zz");
+
+    }
+
+    private void totalSalesPriceProcess(Scanner sc) {
+        double totalSalesPrice = sales.stream()
+                .mapToDouble(Order::getTotalPrice)
+                .sum();
+
+        System.out.println("[ 총 판매금액 현황 ]");
+        System.out.printf("현재까지 총 판매된 금액은 [ W %.1f ] 입니다. %n", totalSalesPrice);
+        System.out.println("1. 돌아가기");
+
+        int select = sc.nextInt();
+        if (select == 1) {
+            salesMenuProcess(sc);
+        } else {
+            throw new IndexOutOfBoundsException();
         }
     }
 
@@ -113,34 +155,36 @@ public class KioskApp {
     }
 
     private void orderProcess(Scanner sc) {
-        showOrder();
+        Order order = new Order(new ArrayList<>(cart), waitNo);
+        showOrder(order);
         int select = sc.nextInt();
         switch (select) {
-            case 1 -> requestOrder();
+            case 1 -> requestOrder(order);
             case 2 -> this.start();
             default -> throw new IndexOutOfBoundsException(INVALID_SELECT_MESSAGE);
         }
     }
 
     private void addCart(Product product) {
-        order.addProduct(product);
+        cart.add(product);
         this.start();
     }
 
     private void cancelOrder() {
         System.out.println("진행하던 주문이 취소되었습니다.");
-        order.cancel();
+        cart.clear();
         this.start();
     }
 
-    private void requestOrder() {
-        if (order.getProducts().isEmpty()) {
+    private void requestOrder(Order order) {
+        if (cart.isEmpty()) {
             throw new NoOrderProductException();
         }
-
         System.out.println("주문이 완료되었습니다!");
-        order.setWaitNoAndClearCart(waitNo++);
-        System.out.printf("대기번호는 [ %d ] 번 입니다.", order.getWaitNo());
+        sales.add(order);
+        cart.clear();
+        waitNo++;
+        System.out.printf("대기번호는 [ %d ] 번 입니다. %n", order.getWaitNo());
         try {
             for (int i = 3; i >= 1; i--) {
                 System.out.printf("%d초 후 메뉴판으로 돌아갑니다. %n", i);
@@ -157,7 +201,7 @@ public class KioskApp {
         System.out.println("아래 메뉴판을 보시고 메뉴를 골라 입력해주세요.");
         System.out.println("[ TWOSOME MENU ]");
         int idx = 1;
-        for (Menu menu: menus) {
+        for (Menu menu : menus) {
             System.out.printf("%d. %s %n", idx++, menu.printMenu());
         }
         System.out.println("[ ORDER MENU ]");
@@ -166,15 +210,12 @@ public class KioskApp {
     }
 
     private void showBuyProduct(Product product) {
-       /* "Hamburger     | W 5.4 | 비프패티를 기반으로 야채가 들어간 기본버거"
-        위 메뉴를 장바구니에 추가하시겠습니까?
-        1. 확인        2. 취소*/
         System.out.println(product.printInfoWithOption());
         System.out.println("위 메뉴를 장바구니에 추가하시겠습니까?");
         System.out.println("1. 확인        2. 취소");
     }
 
-    private void showOrder() {
+    private void showOrder(Order order) {
         System.out.println("아래와 같이 주문 하시겠습니까?");
         System.out.println("[ Orders ]");
         System.out.println(order.printOrderProductsInfo());
