@@ -91,17 +91,10 @@ public class KioskApp {
 
     private void orderMenuProcess(Scanner sc, int select) {
         //주문 메뉴
-        switch (select - MENU_CATEGORY_SIZE) {
-            case ORDER -> {
-                showOrder();
-                select = sc.nextInt();
-                switch (select) {
-                    case 1 -> requestOrder();
-                    case 2 -> this.start();
-                    default -> throw new IndexOutOfBoundsException(INVALID_SELECT_MESSAGE);
-                }
-            }
+        switch (command) {
+            case ORDER -> orderProcess(sc);
             case CANCEL -> cancelOrder();
+            default -> throw new MenuNotFoundException();
         }
     }
 
