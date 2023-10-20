@@ -11,9 +11,11 @@ public class Order {
     private int waitNo; //대기 번호
 
     public void addProduct(Product product) {
+        String key = product.getName() + product.getOption();
+        Integer count = countMap.getOrDefault(key, 0);
+
         products.add(product);
-        Integer count = countMap.getOrDefault(product.getName(), 0);
-        countMap.put(product.getName(), ++count);
+        countMap.put(key, ++count);
     }
 
     public String printTotal() {
@@ -30,6 +32,7 @@ public class Order {
     public void setWaitNoAndClearCart(int waitNo) {
         this.waitNo = waitNo;
         products.clear();
+        countMap.clear();
     }
 
     public String printOrderProductsInfo() {
@@ -39,17 +42,19 @@ public class Order {
                 .forEach(product ->
                         sb.append(
                                 String.format(
-                                        "%-38s |  W %.1f  |  %d개  |  %s %n",
+                                        "%s (%s) %10s |  W %.1f  |  %d개  |  %s %n",
                                         product.getName(),
-                                        product.getPrice(),
-                                        countMap.get(product.getName()),
+                                        product.getOption()
+                                                .getEng(),
+                                        " ",
+                                        product.getResultPrice(),
+                                        countMap.get(product.getName() + product.getOption()),
                                         product.getDescription()
                                 )
                         )
                 );
         return sb.toString();
     }
-
     public void cancel() {
         products.clear();
     }

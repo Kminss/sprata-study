@@ -2,6 +2,7 @@ package com.sparta.study.task01.app;
 
 import com.sparta.study.task01.constant.MenuCategory;
 import com.sparta.study.task01.constant.OrderCommand;
+import com.sparta.study.task01.constant.ProductOption;
 import com.sparta.study.task01.exception.MenuNotFoundException;
 import com.sparta.study.task01.exception.NoOrderProductException;
 import com.sparta.study.task01.model.Menu;
@@ -9,6 +10,8 @@ import com.sparta.study.task01.model.Order;
 import com.sparta.study.task01.model.Product;
 
 import java.util.*;
+
+import static com.sparta.study.task01.constant.OrderCommand.ORDER;
 
 public class KioskApp {
     private final List<Menu> menus = new ArrayList<>();
@@ -33,7 +36,7 @@ public class KioskApp {
             showMenu();
             int select = sc.nextInt() - 1;
             //주문 입력창 수를 벗어난 경우
-            if (select > INVALID_SELECT || select <= 0) {
+            if (select > INVALID_SELECT || select < 0) {
                 throw new IndexOutOfBoundsException(INVALID_SELECT_MESSAGE);
             }
             menuProcess(sc, select);
@@ -68,22 +71,36 @@ public class KioskApp {
 
         //상품 메뉴
         showProductMenu(menu);
-        productProcess(menu.getProducts(), sc);
+        productProcess(menu.getProducts(), category, sc);
     }
 
-    private void productProcess(List<Product> products, Scanner sc) {
+    private void productProcess(List<Product> products, MenuCategory category, Scanner sc) {
         //상품 선택
-        int select = sc.nextInt();
-        Product product = products.get(select - 1);
+        int select = sc.nextInt() - 1;
+        Product menuProduct = products.get(select);
+        showSelectProductOption(menuProduct, category);
 
+        //선택상품 생성
+        select = sc.nextInt() - 1;
+        ProductOption option = category.getOptions().get(select);
+        Product product = Product.of(menuProduct, option);
+
+        //구입할 상품 show
         showBuyProduct(product);
-        select = sc.nextInt();
+
         //주문 결정
-        switch (select) {
-            case 1 -> addCart(product);
-            case 2 -> this.start();
-            default -> throw new IndexOutOfBoundsException(INVALID_SELECT_MESSAGE);
+        select = sc.nextInt() - 1;
+        if (select == ORDER.ordinal()) {
+            addCart(product);
+        } else {
+            this.start();
         }
+    }
+
+    private void showSelectProductOption(Product product, MenuCategory category) {
+        System.out.println(product.printInfo());
+        System.out.println("위 메뉴의 어떤 옵션으로 추가하시겠습니까?");
+        System.out.println(category.printOptions(product.getPrice()));
     }
 
     private void orderMenuProcess(Scanner sc, OrderCommand command) {
@@ -125,8 +142,8 @@ public class KioskApp {
         order.setWaitNoAndClearCart(waitNo++);
         System.out.printf("대기번호는 [ %d ] 번 입니다.", order.getWaitNo());
         try {
-            for (int i = 3; i > 1; i--) {
-                System.out.printf("%d초 후 메뉴판으로 돌아갑니다.", i);
+            for (int i = 3; i >= 1; i--) {
+                System.out.printf("%d초 후 메뉴판으로 돌아갑니다. %n", i);
                 Thread.sleep(1000);
             }
             this.start();
@@ -152,7 +169,7 @@ public class KioskApp {
        /* "Hamburger     | W 5.4 | 비프패티를 기반으로 야채가 들어간 기본버거"
         위 메뉴를 장바구니에 추가하시겠습니까?
         1. 확인        2. 취소*/
-        System.out.println(product.printInfo());
+        System.out.println(product.printInfoWithOption());
         System.out.println("위 메뉴를 장바구니에 추가하시겠습니까?");
         System.out.println("1. 확인        2. 취소");
     }
