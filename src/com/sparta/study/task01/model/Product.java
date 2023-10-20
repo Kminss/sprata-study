@@ -11,8 +11,7 @@ public class Product extends Menu{
     public double getPrice() {
         return price;
     }
-    @Override
-    public String printMenu() {
+    public String printInfo() {
         return String.format("%-38s |  W %.1f  |  %s", name, price, description);
     }
 }
