@@ -9,9 +9,10 @@ import com.sparta.study.task01.model.Menu;
 import com.sparta.study.task01.model.Order;
 import com.sparta.study.task01.model.Product;
 
-import java.util.*;
-
-import static com.sparta.study.task01.constant.OrderCommand.ORDER;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Scanner;
 
 public class KioskApp {
     private final List<Menu> menus = new ArrayList<>();
@@ -23,65 +24,74 @@ public class KioskApp {
     private static final int SALES_MENU_SIZE = -1;
     private static final int ORDER_MENU_SIZE = 2;
     private static final int MENU_CATEGORY_SIZE = MenuCategory.values().length;
-    private static final int INVALID_SELECT = MENU_CATEGORY_SIZE + ORDER_MENU_SIZE;
+    private static final int INVALID_MENU_SELECT_SIZE = MENU_CATEGORY_SIZE + ORDER_MENU_SIZE;
 
     //Exception Msg
     private static final String INVALID_SELECT_MESSAGE = "다시 입력해주세요";
+    private final Scanner sc = new Scanner(System.in);
 
     public KioskApp() {
         init();
     }
 
     public boolean start() {
-        Scanner sc = new Scanner(System.in);
-        try {
-            showMenu();
-            int select = sc.nextInt() - 1;
-            //주문 입력창 수를 벗어난 경우
-            if (select > INVALID_SELECT || select < -1) {
-                throw new IndexOutOfBoundsException(INVALID_SELECT_MESSAGE);
-            }
-            menuProcess(sc, select);
-            //선택한 번호가 메뉴 카테고리 길이보다 크면, 주문/주문취소 선택
-        } catch (InputMismatchException ex) {
-            throw new InputMismatchException(INVALID_SELECT_MESSAGE);
-        } catch (RuntimeException ex) {
-            System.out.println(ex.getMessage());
-            this.start();
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-            sc.close();
-            return false;
+        showMenu();
+        int selection = handleInputMenu(INVALID_MENU_SELECT_SIZE);
+
+        if (selection == SALES_MENU_SIZE) {
+            salesMenuProcess();
         }
+
+        if (selection >= MENU_CATEGORY_SIZE) {
+            orderMenuProcess(OrderCommand.values()[selection - MENU_CATEGORY_SIZE]);
+        } else {
+            productMenuProcess(MenuCategory.values()[selection]);
+        }
+
         return true;
     }
 
-
-    private void menuProcess(Scanner sc, int select) {
-
-        if (select == SALES_MENU_SIZE) {
-            salesMenuProcess(sc);
+    private int handleInputMenu(int menuSize) {
+        int select;
+        //주문 입력창 수를 벗어난 경우
+        while (true) {
+            try {
+                select = sc.nextInt();
+                if (select > menuSize || select < 0) {
+                    throw new IndexOutOfBoundsException();
+                }
+                break;
+            } catch (RuntimeException exception) {
+                System.out.println(INVALID_SELECT_MESSAGE);
+            }
         }
-        if (select >= MENU_CATEGORY_SIZE) {
-            orderMenuProcess(sc, OrderCommand.values()[select - MENU_CATEGORY_SIZE]);
-        } else {
-            productMenuProcess(sc, MenuCategory.values()[select]);
+        return select - 1;
+    }
+
+    private void salesMenuProcess() {
+        System.out.println("1. 총 판매금액 조회        2. 총 판매상품 목록 조회     3. 돌아가기");
+
+        int selection = handleInputMenu(3);
+        switch (selection) {
+            case 0 -> totalSalesPriceProcess();
+            case 1 -> salesListProcess();
+            case 2 -> this.start();
         }
     }
 
-    private void salesMenuProcess(Scanner sc) {
-        System.out.println("1. 총 판매금액 조회        2. 총 판매상품 목록 조회     3. 돌아가기  ");
-        int select = sc.nextInt() - 1;
-        if (select == 0) {
-            totalSalesPriceProcess(sc);
-        } else if (select == 1) {
-            salesListProcess(sc);
-        } else {
-            this.start();
+    private void salesListProcess() {
+        showTotalSalesProducts();
+
+        System.out.println("1. 돌아가기");
+        int selection = handleInputMenu(1);
+
+        //메뉴가 한개라 if 문이 필요가 없어졌지만 가독성을 위해 넣어봄..
+        if (selection == 0) {
+            salesMenuProcess();
         }
     }
 
-    private void salesListProcess(Scanner sc) {
+    private void showTotalSalesProducts() {
         System.out.println("[ 총 판매상품 목록 현황 ]");
 
         for (Order order : sales) {
@@ -89,113 +99,107 @@ public class KioskApp {
                 System.out.printf("- %-38s | W %.1f %n", product.getName(), product.getResultPrice());
             }
         }
+    }
+
+
+    private void totalSalesPriceProcess() {
+        double totalSalesPrice = getTotalSales();
+        showTotalSalesAmount(totalSalesPrice);
+
         System.out.println("1. 돌아가기");
-        int select = sc.nextInt();
-        if (select == 1) {
-            salesMenuProcess(sc);
-        } else {
-            throw new IndexOutOfBoundsException("잘 못된 입력으로 메인 메뉴로 돌아갑니다.");
+        int selection = handleInputMenu(1);
+
+        if (selection == 0) {
+            salesMenuProcess();
         }
     }
 
 
-    private void totalSalesPriceProcess(Scanner sc) {
-        double totalSalesPrice = sales.stream()
-                .mapToDouble(Order::getTotalPrice)
-                .sum();
-
-        System.out.println("[ 총 판매금액 현황 ]");
-        System.out.printf("현재까지 총 판매된 금액은 [ W %.1f ] 입니다. %n", totalSalesPrice);
-        System.out.println("1. 돌아가기");
-
-        int select = sc.nextInt();
-        if (select == 1) {
-            salesMenuProcess(sc);
-        } else {
-            throw new IndexOutOfBoundsException("잘 못된 입력으로 메인 메뉴로 돌아갑니다.");
-        }
-    }
-
-    private void productMenuProcess(Scanner sc, MenuCategory category) {
+    private void productMenuProcess(MenuCategory category) {
         //메뉴보기
         Menu menu = menus.stream()
                 .filter(m -> m.getName().equals(category.name()))
                 .findFirst()
                 .orElseThrow(MenuNotFoundException::new);
+        showProductsMenu(menu);
 
-        //상품 메뉴
-        showProductMenu(menu);
-        productProcess(menu.getProducts(), category, sc);
+        productProcess(menu.getProducts(), category);
     }
 
-    private void productProcess(List<Product> products, MenuCategory category, Scanner sc) {
-        //상품 선택
-        int select = sc.nextInt() - 1;
-        Product menuProduct = products.get(select);
-        showSelectProductOption(menuProduct, category);
+    private void showProductsMenu(Menu menu) {
+        System.out.println("\"투썸플레이스에 오신걸 환영합니다.\"");
+        System.out.println("아래 상품메뉴판을 보시고 메뉴를 골라 입력해주세요.");
+        System.out.println();
+        System.out.printf("[ %s MENU ] %n", menu.getName());
+        menu.printProductsMenu();
+    }
 
-        //선택상품 생성
-        select = sc.nextInt() - 1;
-        ProductOption option = category.getOptions().get(select);
-        Product product = Product.of(menuProduct, option);
+    private void productProcess(List<Product> products, MenuCategory category) {
+        Product product = makeSelectProduct(products, category);
 
         //구입할 상품 show
-        showBuyProduct(product);
+        product.printInfoWithOption();
 
         //주문 결정
-        select = sc.nextInt() - 1;
-        if (select == ORDER.ordinal()) {
-            addCart(product);
-        } else {
-            this.start();
-        }
-    }
+        System.out.println("위 메뉴를 장바구니에 추가하시겠습니까?");
+        System.out.println("1. 확인        2. 취소");
 
-    private void showSelectProductOption(Product product, MenuCategory category) {
-        System.out.println(product.printInfo());
-        System.out.println("위 메뉴의 어떤 옵션으로 추가하시겠습니까?");
-        System.out.println(category.printOptions(product.getPrice()));
-    }
-
-    private void orderMenuProcess(Scanner sc, OrderCommand command) {
-        //주문 메뉴
+        int selection = handleInputMenu(2);
+        OrderCommand command = OrderCommand.values()[selection];
         switch (command) {
-            case ORDER -> orderProcess(sc);
+            case ORDER -> addCart(product);
+            case CANCEL -> this.start();
+        }
+    }
+
+    private Product makeSelectProduct(List<Product> products, MenuCategory category) {
+        int selection = handleInputMenu(products.size());
+        Product selectedProduct = products.get(selection);
+
+        //상품 선택
+        selectedProduct.printInfo();
+        System.out.println("위 메뉴의 어떤 옵션으로 추가하시겠습니까?");
+        category.printOptions(selectedProduct.getPrice());
+
+        //선택상품 생성
+        selection = handleInputMenu(category.getOptions().size());
+        ProductOption option = category.getOptions().get(selection);
+        return Product.of(selectedProduct, option);
+    }
+
+    private void orderMenuProcess(OrderCommand command) {
+        switch (command) {
+            case ORDER -> orderProcess();
             case CANCEL -> cancelOrder();
-            default -> throw new MenuNotFoundException();
         }
     }
 
-    private void orderProcess(Scanner sc) {
+    private void orderProcess() {
         Order order = new Order(new ArrayList<>(cart), waitNo);
+
         showOrder(order);
-        int select = sc.nextInt();
-        switch (select) {
-            case 1 -> requestOrder(order);
-            case 2 -> this.start();
-            default -> throw new IndexOutOfBoundsException(INVALID_SELECT_MESSAGE);
+        System.out.println("1. 주문      2. 메뉴판");
+
+        int selection = handleInputMenu(2);
+        OrderCommand command = OrderCommand.values()[selection];
+        switch (command) {
+            case ORDER -> requestOrder(order);
+            case CANCEL -> this.start();
         }
     }
 
-    private void addCart(Product product) {
-        cart.add(product);
-        this.start();
-    }
 
-    private void cancelOrder() {
-        System.out.println("진행하던 주문이 취소되었습니다.");
-        cart.clear();
-        this.start();
-    }
 
     private void requestOrder(Order order) {
         if (cart.isEmpty()) {
             throw new NoOrderProductException();
         }
+
         System.out.println("주문이 완료되었습니다!");
         sales.add(order);
         cart.clear();
         waitNo++;
+
         System.out.printf("대기번호는 [ %d ] 번 입니다. %n", order.getWaitNo());
         try {
             for (int i = 3; i >= 1; i--) {
@@ -204,48 +208,6 @@ public class KioskApp {
             }
             this.start();
         } catch (InterruptedException ignored) {
-        }
-    }
-
-
-    private void showMenu() {
-        System.out.println("\"투썸플레이스에 오신걸 환영합니다.\"");
-        System.out.println("아래 메뉴판을 보시고 메뉴를 골라 입력해주세요.");
-        System.out.println("[ TWOSOME MENU ]");
-        int idx = 1;
-        for (Menu menu : menus) {
-            System.out.printf("%d. %s %n", idx++, menu.printMenu());
-        }
-        System.out.println("[ ORDER MENU ]");
-        System.out.printf("%d. Order       | 장바구니를 확인 후 주문합니다. %n", idx++);
-        System.out.printf("%d. Cancel      | 진행중인 주문을 취소합니다. %n", idx);
-    }
-
-    private void showBuyProduct(Product product) {
-        System.out.println(product.printInfoWithOption());
-        System.out.println("위 메뉴를 장바구니에 추가하시겠습니까?");
-        System.out.println("1. 확인        2. 취소");
-    }
-
-    private void showOrder(Order order) {
-        System.out.println("아래와 같이 주문 하시겠습니까?");
-        System.out.println("[ Orders ]");
-        System.out.println(order.printOrderProductsInfo());
-
-        System.out.println("[ Total ]");
-        System.out.println(order.printTotal());
-
-        System.out.println("1. 주문      2. 메뉴판");
-    }
-
-    private void showProductMenu(Menu menu) {
-
-        System.out.println("\"투썸플레이스에 오신걸 환영합니다.\"");
-        System.out.println("아래 상품메뉴판을 보시고 메뉴를 골라 입력해주세요.");
-        System.out.printf("[ %s MENU ] %n", menu.getName());
-        int idx = 1;
-        for (Product product : menu.getProducts()) {
-            System.out.printf("%d. %s %n", idx++, product.printInfo());
         }
     }
 
@@ -259,5 +221,46 @@ public class KioskApp {
                             menus.add(menu);
                         }
                 );
+    }
+    private void showOrder(Order order) {
+        System.out.println("아래와 같이 주문 하시겠습니까?");
+        System.out.println("[ Orders ]");
+        order.printOrderProductsInfo();
+        System.out.println("[ Total ]");
+        order.printTotal();
+    }
+    private void showTotalSalesAmount(double totalSalesPrice) {
+        System.out.println("[ 총 판매금액 현황 ]");
+        System.out.printf("현재까지 총 판매된 금액은 [ W %.1f ] 입니다. %n", totalSalesPrice);
+    }
+
+    private double getTotalSales() {
+        return sales.stream()
+                .mapToDouble(Order::getTotalPrice)
+                .sum();
+    }
+
+    private void showMenu() {
+        System.out.println("\"투썸플레이스에 오신걸 환영합니다.\"");
+        System.out.println("아래 메뉴판을 보시고 메뉴를 골라 입력해주세요.");
+        System.out.println("[ TWOSOME MENU ]");
+        int idx = 1;
+        for (Menu menu : menus) {
+            System.out.printf("%d.", idx);
+            menu.printMenu();
+        }
+        System.out.println("[ ORDER MENU ]");
+        System.out.printf("%d. Order       | 장바구니를 확인 후 주문합니다. %n", idx++);
+        System.out.printf("%d. Cancel      | 진행중인 주문을 취소합니다. %n", idx);
+    }
+
+    private void addCart(Product product) {
+        cart.add(product);
+    }
+
+    private void cancelOrder() {
+        System.out.println("진행하던 주문이 취소되었습니다.");
+        cart.clear();
+        this.start();
     }
 }

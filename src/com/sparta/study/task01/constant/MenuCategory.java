@@ -1,7 +1,6 @@
 package com.sparta.study.task01.constant;
 
 import java.util.List;
-import java.util.Set;
 
 import static com.sparta.study.task01.constant.ProductOption.*;
 
@@ -30,12 +29,13 @@ public enum MenuCategory {
         return options;
     }
 
-    public String printOptions(double price) {
+    public void printOptions(double price) {
         StringBuilder sb = new StringBuilder();
         int idx = 1;
         for (ProductOption option : options) {
             sb.append(String.format("%d. %s(W %.1f) \t", idx++, option.getEng(), option.calculate(price)));
         }
-        return sb.toString();
+
+        System.out.println(sb);
     }
 }

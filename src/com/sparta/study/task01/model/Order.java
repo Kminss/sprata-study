@@ -24,20 +24,20 @@ public class Order {
                 });
     }
 
-    public String printTotal() {
+    public void printTotal() {
         double total = products.stream()
                 .mapToDouble(Product::getResultPrice)
                 .sum();
-        return String.format("W %.1f", total);
+
+        System.out.printf("W %.1f", total);
     }
 
-    public String printOrderProductsInfo() {
-        StringBuilder sb = new StringBuilder();
+    public void printOrderProductsInfo() {
         products.stream()
                 .distinct()
                 .forEach(product -> {
                     String name = product.getName() + " " + product.getOption().getEng();
-                            sb.append(
+                    System.out.printf(
                                     String.format(
                                             "%-10s |  W %.1f  |  %d개  |  %s %n",
                                             name,
@@ -48,7 +48,6 @@ public class Order {
                             );
                         }
                 );
-        return sb.toString();
     }
     public List<Product> getProducts() {
         return products;

@@ -32,12 +32,12 @@ public class Product extends Menu{
     }
 
 
-    public String printInfo() {
-        return String.format("%-38s |  W %.1f  |  %s", name, price, description);
+    public void printInfo() {
+        System.out.printf("%-38s |  W %.1f  |  %s", name, price, description);
     }
 
-    public String printInfoWithOption() {
-        return String.format("%s (%s) %10s |  W %.1f  |  %s", name, option.getEng(), " ", option.calculate(price), description);
+    public void printInfoWithOption() {
+        System.out.printf("%s (%s) %10s |  W %.1f  |  %s %n", name, option.getEng(), " ", option.calculate(price), description);
     }
     public ProductOption getOption() {
         return option;
