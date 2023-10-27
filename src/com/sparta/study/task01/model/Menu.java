@@ -28,8 +28,8 @@ public class Menu {
         return products;
     }
 
-    public String printMenu() {
-        return String.format("%-15s | %s", name, description);
+    public void printMenu() {
+        System.out.printf("%-15s | %s %n", name, description);
     }
 
     public void addProducts(MenuCategory category) {
@@ -54,6 +54,14 @@ public class Menu {
                             Product.of("Mascarpone Tiramisu", "마스카포네 치즈 크림과 에스프레소 커피 시럽이 촉촉하게 어우러진 이탈리안 무스 케이크", 36.0),
                             Product.of("New York Cheese Cake", "부드럽고 촉촉한 식감과 진한 치즈의 맛을 느낄 수 있는 정통 뉴욕 스타일의 구움 치즈 케이크", 35.0)
                     );
+        }
+    }
+
+    public void printProductsMenu() {
+        int idx = 1;
+        for (Product product :products) {
+            System.out.printf("%d. ", idx++);
+             product.printInfo();
         }
     }
 }
